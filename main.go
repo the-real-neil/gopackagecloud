@@ -104,8 +104,11 @@ func (x *CmdVersion) Execute(args []string) error {
 	if !ok {
 		return errors.New("debug.ReadBuildInfo()")
 	}
-	fmt.Println(info)
-	fmt.Printf("%v %v %v\n", info.Main.Path, info.Main.Version, info.Main.Sum)
+	if opts.Verbose {
+		fmt.Println(info)
+	} else {
+		fmt.Printf("%v %v %v\n", info.Main.Path, info.Main.Version, info.Main.Sum)
+	}
 	return nil
 }
 
