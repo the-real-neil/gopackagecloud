@@ -99,6 +99,8 @@ var (
 
 type CmdVersion struct{}
 
+var cmdVersion = new(CmdVersion)
+
 func (x *CmdVersion) Execute(args []string) error {
 	if 0 < len(args) {
 		return errors.New("bad args")
@@ -144,7 +146,7 @@ func main() {
 	here := filepath.Dir(this)
 
 	parser = flags.NewParser(&opts, flags.Default)
-	parser.AddCommand("version", "print version information", "Print version information.", new(CmdVersion))
+	parser.AddCommand("version", "print version information", "Print version information.", cmdVersion)
 	args, err := parser.Parse()
 	if nil != err {
 		// generic parse error
