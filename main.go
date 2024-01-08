@@ -100,6 +100,9 @@ var (
 type CmdVersion struct{}
 
 func (x *CmdVersion) Execute(args []string) error {
+	if 0 < len(args) {
+		return errors.New("bad args")
+	}
 	info, ok := debug.ReadBuildInfo()
 	if !ok {
 		return errors.New("debug.ReadBuildInfo()")
