@@ -5,8 +5,9 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
+	"log"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -37,6 +38,10 @@ var (
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	// Override the default 'Error:' to 'ERROR:' because the latter looks
+	// better.
+	rootCmd.SetErrPrefix(strings.ToUpper(rootCmd.ErrPrefix()))
+
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
@@ -92,11 +97,10 @@ func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		if verbose {
-			fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
-		}
-	} else {
-		panic(err)
+	if err := viper.ReadInConfig(); err != nil {
+		log.Fatalf("ERROR: %v", err)
+	}
+	if verbose {
+		log.Printf("INFO: using config file:", viper.ConfigFileUsed())
 	}
 }
