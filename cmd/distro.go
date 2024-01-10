@@ -18,7 +18,8 @@ func init() {
 		},
 	}
 	distroCmd.AddCommand(&cobra.Command{
-		Use: "list",
+		Use:  "list",
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return errors.New("missing command")
 		},
