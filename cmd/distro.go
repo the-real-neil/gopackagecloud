@@ -18,10 +18,12 @@ func init() {
 		},
 	}
 	distroCmd.AddCommand(&cobra.Command{
-		Use:  "list",
-		Args: cobra.ExactArgs(1),
+		Use:   "list PACKAGE_TYPE",
+		Short: "list available distros and versions for PACKAGE_TYPE",
+		Long:  `List available distros and versions for PACKAGE_TYPE.`,
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return errors.New("missing command")
+			return errors.New("TODO: implement this")
 		},
 	})
 	rootCmd.AddCommand(distroCmd)
