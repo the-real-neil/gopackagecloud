@@ -9,15 +9,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// distroCmd represents the distro command
-var distroCmd = &cobra.Command{
-	Use: "distro",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("missing command")
-	},
-}
-
 func init() {
+	// distroCmd represents the distro command
+	distroCmd := &cobra.Command{
+		Use: "distro",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return errors.New("missing command")
+		},
+	}
+	distroCmd.AddCommand(&cobra.Command{
+		Use: "list",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return errors.New("missing command")
+		},
+	})
 	rootCmd.AddCommand(distroCmd)
 
 	// Here you will define your flags and configuration settings.
