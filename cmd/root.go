@@ -10,11 +10,13 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 var (
 	cfgFile string
+	token   string
 	url     string
 	verbose bool
 	rootCmd = &cobra.Command{
@@ -35,13 +37,10 @@ var (
 	}
 )
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
+// Execute adds all child commands to the root command and sets flags
+// appropriately.  This is called by main.main(). It only needs to happen once
+// to the rootCmd.
 func Execute() {
-	// Override the default 'Error:' to 'ERROR:' because the latter looks
-	// better.
-	rootCmd.SetErrPrefix(strings.ToUpper(rootCmd.ErrPrefix()))
-
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
@@ -49,7 +48,20 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	// Clear the log flags as early as possible. We want to avoid the datetime
+	// (default) message prefix.
+	log.SetFlags(0)
+
+	// Override the default 'Error:' to 'ERROR:' because the latter looks
+	// better.
+	rootCmd.SetErrPrefix(strings.ToUpper(rootCmd.ErrPrefix()))
+
+	// Find the current user's home directory. We need this for the default
+	// config file path.
+	home, err := os.UserHomeDir()
+	if nil != err {
+		log.Fatalln("ERROR:", err)
+	}
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
@@ -58,15 +70,22 @@ func init() {
 		&cfgFile,
 		"config",
 		"",
+		home+"/.packagecloud",
+		"Specify the packagecloud config file.",
+	)
+	rootCmd.PersistentFlags().StringVarP(
+		&token,
+		"token",
 		"",
-		"Specify a path to config file containing your API token and URL.",
+		"",
+		"Specify the packagecloud API token.",
 	)
 	rootCmd.PersistentFlags().StringVarP(
 		&url,
 		"url",
 		"",
 		"https://packagecloud.io",
-		"Specify the website URL to use; useful for packagecloud:enterprise users.",
+		"Specify the packagecloud URL.",
 	)
 	rootCmd.PersistentFlags().BoolVarP(
 		&verbose,
@@ -75,32 +94,37 @@ func init() {
 		false,
 		"Enable verbose mode",
 	)
+	cobra.OnInitialize(initConfig)
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// // Find home directory.
-		// home, err := os.UserHomeDir()
-		// cobra.CheckErr(err)
-
-		// Search config in home directory with name "packagecloud" (without extension).
-		viper.SetConfigName("gopackagecloud")
-		viper.SetConfigType("json")
-		viper.AddConfigPath("/etc/gopackagecloud")
-		viper.AddConfigPath("$HOME/.config/gopackagecloud")
+	// Bind all flags into the configuration; i.e., every '*VarP' on the
+	// 'rootCmd.PersistentFlags' becomes accessible to viper.
+	if err := viper.BindPFlags(rootCmd.PersistentFlags()); nil != err {
+		log.Fatalln("ERROR:", err)
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
+	// Specify the prefix that environment variables will use.
+	viper.SetEnvPrefix("packagecloud")
 
-	// If a config file is found, read it in.
+	// For each flag, bind its name (as viper key) to an environment variable.
+	rootCmd.PersistentFlags().VisitAll(
+		func(flag *pflag.Flag) {
+			viper.BindEnv(flag.Name)
+		},
+	)
+
+	// Read in environment variables that match.
+	viper.AutomaticEnv()
+
+	viper.SetConfigFile(cfgFile)
+	viper.SetConfigType("json")
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalf("ERROR: %v", err)
 	}
 	if verbose {
 		log.Printf("INFO: using config file:", viper.ConfigFileUsed())
+		viper.DebugTo(os.Stderr)
 	}
 }
